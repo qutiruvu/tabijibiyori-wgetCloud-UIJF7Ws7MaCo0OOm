@@ -1,2 +1,71 @@
-# tabijibiyori-wgetCloud-UIJF7Ws7MaCo0OOm
-wgetCloud官网全球加速机场:手机能用优惠码
+# 背景信息
+
+* Alert：[https://x.com/TenArmorAlert/status/1968502320645177731](https://github.com)
+* TX：[https://app.blocksec.com/explorer/tx/bsc/0xc2066e0dff1a8a042057387d7356ad7ced76ab90904baa1e0b5ecbc2434df8e1](https://github.com)
+
+# Trace 分析
+
+攻击者先从不同的地址收集资金
+
+[![](https://img2024.cnblogs.com/blog/1483609/202509/1483609-20250919220926844-1243867975.png)](https://img2024.cnblogs.com/blog/1483609/202509/1483609-20250919220926844-1243867975.png)
+
+随后通过多个 flashloan 筹集 BUSD
+
+[![](https://img2024.cnblogs.com/blog/1483609/202509/1483609-20250919220944226-879504120.png)](https://img2024.cnblogs.com/blog/1483609/202509/1483609-20250919220944226-879504120.png)
+
+最终获得约 21.1M 的 BUSD
+
+[![](https://img2024.cnblogs.com/blog/1483609/202509/1483609-20250919220957810-1009710658.png)](https://img2024.cnblogs.com/blog/1483609/202509/1483609-20250919220957810-1009710658.png)
+
+在多层嵌套的闪电贷中定位到攻击点
+
+1. Swap1：攻击者将所有 BUSD 兑换成 NGP，并发送到 0 地址中
+2. Swap2：攻击者将 NGP 兑换成 BUSD，获利 2212888 BUSD
+
+[![](https://img2024.cnblogs.com/blog/1483609/202509/1483609-20250919221027252-630477346.png)](https://img2024.cnblogs.com/blog/1483609/202509/1483609-20250919221027252-630477346.png)
+
+# 代码分析
+
+漏洞的成因是当用户卖出 NGP 代币时，会触发价格更新机制。pair 中的 NGP 代币会被按照比例转移到 treasuryAddress 和 rewardPoolAddress 中，然后更新 pair 的价格。最终目的就是抬高 pair 里面 NGP 代币的价格。
+
+如果 poolAmount 的大小接近于 burnAmount 的大小，执行完回购机制后 NGP 的价格将会变得很高，此时只需要少量的 NGP 就能够把 pair 中的 BUSD 全部兑换出来。
+
+[![](https://img2024.cnblogs.com/blog/1483609/202509/1483609-20250919221048953-365151837.png)](https://img2024.cnblogs.com/blog/1483609/202509/1483609-20250919221048953-365151837.png)
+
+## Swap1
+
+攻击者第一次 swap 的目的是尽可能地减少 pair 中 NGP 代币的数量，为第二次 swap 的获利做准备
+
+[![](https://img2024.cnblogs.com/blog/1483609/202509/1483609-20250919221104205-285890959.png)](https://img2024.cnblogs.com/blog/1483609/202509/1483609-20250919221104205-285890959.png)
+
+在这里攻击者利用了 0 地址在 whitelisted 中的特点，直接绕过了代币对购买金额和购买时间的限制。
+
+[![](https://img2024.cnblogs.com/blog/1483609/202509/1483609-20250919221120064-799422527.png)](https://img2024.cnblogs.com/blog/1483609/202509/1483609-20250919221120064-799422527.png)
+
+## Swap2
+
+在 Swap2 中，攻击者触发价格更新机制，pair 中的 NGP 代币被大量转出后，pair 中 NGP 的 reverse1 数量缩小为为原来的 0.00000007 倍。
+
+[![](https://img2024.cnblogs.com/blog/1483609/202509/1483609-20250919221144439-1277992.png)](https://img2024.cnblogs.com/blog/1483609/202509/1483609-20250919221144439-1277992.png)
+
+在 NGP 价格被抬高后，继续执行攻击者向 pair 的 NGP 转账操作，并以操控后的价格完成 swap，最终完成获利。
+
+[![](https://img2024.cnblogs.com/blog/1483609/202509/1483609-20250919221157952-629105006.png)](https://img2024.cnblogs.com/blog/1483609/202509/1483609-20250919221157952-629105006.png):[悠兔机场加速器订阅](https://www.baijiatu.com)
+
+---
+
+随后就是攻击者归还闪电贷，将部分获利的 BUSD 换成 BNB 后，进行资金转移。
+
+[![](https://img2024.cnblogs.com/blog/1483609/202509/1483609-20250919221210953-791048741.png)](https://img2024.cnblogs.com/blog/1483609/202509/1483609-20250919221210953-791048741.png)
+
+* [背景信息](#%E8%83%8C%E6%99%AF%E4%BF%A1%E6%81%AF)
+* [Trace 分析](#trace-%E5%88%86%E6%9E%90)
+* [代码分析](#%E4%BB%A3%E7%A0%81%E5%88%86%E6%9E%90)
+* [Swap1](#swap1)
+* [Swap2](#swap2)
+
+\_\_EOF\_\_
+
+https://github.com/ACaiGarden/p/19101788 - **关于博主：** 评论和私信会在第一时间回复。或者[直接私信](https://github.com)我。
+- **版权声明：** 本博客所有文章除特别声明外，均采用 [BY-NC-SA](https://github.com "BY-NC-SA") 许可协议。转载请注明出处！
+- **声援博主：** 如果您觉得文章对您有帮助，可以点击文章右下角**【[推荐](javascript:void(0);)】**一下。
